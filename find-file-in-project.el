@@ -825,13 +825,17 @@ After opening the file, forward LNUM lines."
    `(lambda (file)
       ;; only one item in project files
       (if ,directory-p
-          (if (quote ,new-window-p)
-              (dired-other-window file)
-            (switch-to-buffer (dired file)))
+          (cond
+           ((equal ,new-window-p "new-tab") (dired-other-tab file))
+           (,new-window-p (dired-other-window file))
+           (t (switch-to-buffer (dired file)))
+           )
         ;; open file
-        (if (quote ,new-window-p)
-            (find-file-other-window file)
-          (find-file file))
+        (cond
+         ((equal ,new-window-p "new-tab") (find-file-other-tab file))
+         (,new-window-p (find-file-other-window file))
+
+         (t  (find-file file)))
         ;; goto line if needed
         (ffip--forward-line ,lnum)
         (if ,fn (funcall ,fn file))))))
@@ -979,6 +983,12 @@ a `ffip-project-file' whose value is \".git\" by default.
 You can override this by setting the variable `ffip-project-root'."
   (interactive "P")
   (ffip-find-files nil open-another-window))
+
+;;;###autoload
+(defun find-file-in-project-open-other-tab ()
+  "ffip in other tab."
+  (interactive)
+  (ffip-find-files nil "new-tab"))
 
 (defun ffip-file-name-relative-p (filename)
   "Is FILENAME relative?"
@@ -1211,6 +1221,8 @@ This command works in any environment (Windows, etc) out of box."
 
 ;;;###autoload
 (defalias 'ffip 'find-file-in-project)
+;;;###autoload
+(defalias 'ffip-t 'find-file-in-project-open-other-tab)
 ;;;###autoload
 (defalias 'find-relative-path 'ffip-find-relative-path)
 
